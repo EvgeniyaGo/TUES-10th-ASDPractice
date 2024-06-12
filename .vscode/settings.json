@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "common.h": "c",
+        "stdio.h": "c",
+        "string.h": "c",
+        "stdlib.h": "c",
+        "userhandling.h": "c",
+        "basefile.h": "c",
+        "xlocale": "c"
+    }
+}
