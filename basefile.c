@@ -23,11 +23,42 @@ HashTable * createDummyHashTable(HashTable * hashTable, char * filename){
     return hashTable;
 }
 
+
+void dummyMenu(HashTable * hashTable, int logged){
+    if(logged == 0){
+        int choice;
+        do{
+            printf("1. Login; 2. Register; 3. Exit\n");
+            scanf("%d", &choice);
+        } while(choice != 3);
+        if(choice == 1) {
+            printf("Login");
+        }
+        else if(choice == 2) {
+            printf("Register");
+        }
+        else if(choice == 3) {
+            printf("\n[!] Ending program.");
+            exit(0);
+        }
+    }
+    else{
+        int choice;
+        do{
+            printf("Second menu, adi; 4. Exit\n");
+            scanf("%d", &choice);
+        } while(choice != 4);
+    }
+    printf("\n\n\n");
+    Menu(hashTable);
+
+}
+
 int main(void) {
     char filename[30] = "wedontstealyourdata.bin"; 
     HashTable * hashTable = createHashTable(); 
-    hashTable = fileReadAllUsers(filename);
-    hashTable = createDummyHashTable(hashTable, filename);
+//    hashTable = fileReadAllUsers(filename);
+//    hashTable = createDummyHashTable(hashTable, filename);
 //    HashTable * hashTable = fileReadAllUsers(filename);
     printAllUsers(hashTable);
     return 0;
