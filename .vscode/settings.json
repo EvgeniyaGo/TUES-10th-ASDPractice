@@ -6,6 +6,15 @@
         "stdlib.h": "c",
         "userhandling.h": "c",
         "basefile.h": "c",
-        "xlocale": "c"
+        "xlocale": "c",
+        "xstring": "c",
+        "coroutine": "c",
+        "locale": "c",
+        "memory": "c",
+        "optional": "c",
+        "system_error": "c",
+        "thread": "c",
+        "type_traits": "c",
+        "vector": "c"
     }
 }
