@@ -3,6 +3,7 @@
 #include <string.h>
 #include "basefile.h"
 #include "userhandling.h"
+#include "cryptfiles.h"
 
 char generateId(HashTable * table) {
     char random;
@@ -83,7 +84,7 @@ void printAllUsers(HashTable * hashTable){
     for (int i = 0; i < TABLE_SIZE; i++) {
         BucketNode * current = hashTable->buckets[i];
         for(int depth = 0; current != NULL; depth++) {
-            printf("Bucket Index: %d; Depth: %d;  UserName: %s; Password: %s; ID: %c;\n", i, depth, current->user->userName, current->user->password, current->user->id);
+            printf("Bucket Index: %d; Depth: %d;  UserName: %s; Password: %s; ID: %d;\n", i, depth, current->user->userName, current->user->password, current->user->id);
             current = current->next;
         }
     }
@@ -104,11 +105,19 @@ void registerUser(char * username, char * password, HashTable * hashTable, char 
 void fileSaveUsers(HashTable * hashTable, char * filename){
     FILE * fptr;
     fptr = fopen(filename, "wb");
+    if (fptr == NULL) {
+        printf("Error: Cannot create file %s\n", filename);
+        return;
+    }
     printf("Saving all Users...\n");
     for (int i = 0; i < TABLE_SIZE; i++) {
         BucketNode * current = hashTable->buckets[i];
         for(int depth = 0; current != NULL; depth++) {
-            fprintf(fptr, "%c|%s|%s\n", current->user->id, current->user->userName, current->user->password);
+            char toBeEncrypted[MAXREAD];
+            char encrypted[MAXREAD];
+            snprintf(toBeEncrypted, MAXREAD, "%d|%s|%s", current->user->id, current->user->userName, current->user->password);
+            vigenereTable(toBeEncrypted, encrypted);
+            fprintf(fptr, "%s\n", encrypted);
             current = current->next;
         }
     }
@@ -124,7 +133,13 @@ void fileAddUser(HashTable * hashTable, char * filename, User * current){
             return;
         }
     }
-    fprintf(fptr, "%c|%s|%s\n", current->id, current->userName, current->password);
+
+    char toBeEncrypted[MAXREAD];
+    char encrypted[MAXREAD];
+    snprintf(toBeEncrypted, MAXREAD, "%d|%s|%s", current->id, current->userName, current->password);
+    vigenereTable(toBeEncrypted, encrypted);
+    fprintf(fptr, "%s\n", encrypted);
+
     fclose(fptr);
 }
 HashTable * fileReadAllUsers(char * filename){
@@ -135,9 +150,12 @@ HashTable * fileReadAllUsers(char * filename){
         printf("Error: Cannot open file %s\n", filename);
         return NULL;
     }
-    char myString[200];
+    char toBeDecrypted[MAXREAD];
+    char myString[MAXREAD];
+
     int i = 0;
-    while(fgets(myString, 200, fptr)) {
+    while(fgets(toBeDecrypted, MAXREAD, fptr)) {
+        decodeVigenere(toBeDecrypted, myString);
         int id;
         char name[50] = {0};
         char pass[50] = {0};

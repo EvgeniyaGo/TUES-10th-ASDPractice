@@ -3,6 +3,7 @@
 #include <string.h>
 #include "basefile.h"
 #include "userhandling.h"
+#include "cryptfiles.h"
 
 //Working with HashTable - creating, filling, accessing
 //I use hashset with buckets for storing and quickly accessing all the users. From 0(1) till 0(n/26)=0(n)
@@ -24,42 +25,45 @@ HashTable * createDummyHashTable(HashTable * hashTable, char * filename){
 }
 
 
-void dummyMenu(HashTable * hashTable, int logged){
-    if(logged == 0){
-        int choice;
-        do{
-            printf("1. Login; 2. Register; 3. Exit\n");
-            scanf("%d", &choice);
-        } while(choice != 3);
-        if(choice == 1) {
-            printf("Login");
-        }
-        else if(choice == 2) {
-            printf("Register");
-        }
-        else if(choice == 3) {
-            printf("\n[!] Ending program.");
-            exit(0);
-        }
-    }
-    else{
-        int choice;
-        do{
-            printf("Second menu, adi; 4. Exit\n");
-            scanf("%d", &choice);
-        } while(choice != 4);
-    }
-    printf("\n\n\n");
-    Menu(hashTable);
+// void dummyMenu(HashTable * hashTable, int logged){
+//     if(logged == 0){
+//         int choice;
+//         do{
+//             printf("1. Login; 2. Register; 3. Exit\n");
+//             scanf("%d", &choice);
+//         } while(choice != 3);
+//         if(choice == 1) {
+//             printf("Login");
+//         }
+//         else if(choice == 2) {
+//             printf("Register");
+//         }
+//         else if(choice == 3) {
+//             printf("\n[!] Ending program.");
+//             exit(0);
+//         }
+//     }
+//     else{
+//         int choice;
+//         do{
+//             printf("Second menu, adi; 4. Exit\n");
+//             scanf("%d", &choice);
+//         } while(choice != 4);
+//     }
+//     printf("\n\n\n");
+//     dummyMenu(hashTable);
 
-}
+// }
 
 int main(void) {
     char filename[30] = "wedontstealyourdata.bin"; 
     HashTable * hashTable = createHashTable(); 
 //    hashTable = fileReadAllUsers(filename);
 //    hashTable = createDummyHashTable(hashTable, filename);
-//    HashTable * hashTable = fileReadAllUsers(filename);
-    printAllUsers(hashTable);
+    hashTable = fileReadAllUsers(filename);
+    registerUser("Rikaaardo", "hashthispls?no?sad.", hashTable, filename);
+   printAllUsers(hashTable);
+//    fileSaveUsers(hashTable, filename);
+    printf("\n\n-the-end-");
     return 0;
 }
