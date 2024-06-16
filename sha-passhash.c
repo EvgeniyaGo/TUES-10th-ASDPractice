@@ -1,6 +1,7 @@
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+#include "sha-passhash.h"
 
 #define RIGHTROTATE(x, n) (((x) >> (n)) | ((x) << (32 - (n))))
 
@@ -95,19 +96,24 @@ void hashUsingSHA(uint8_t *message, uint8_t hashed[32]) {
     }
 }
 
-int main() {
-    unsigned char message[] = "youbetterfuckingwork.";
+int digitSum(int number) {
+    int sum = 0;
+    while (number != 0) {
+        sum += number % 10;
+        number /= 10;
+    }
+    return sum;
+}
+
+void hashPass(char * message, uint8_t * hashed) {
     if(strlen(message) >= 64){
         printf("Error Message too long");
+        return;
     }
     else{
-        unsigned char hashed[32];
         hashUsingSHA(message, hashed);
-        for (int i = 0; i < 32; i++) {
-            printf("%02x", hashed[i]);
-        }
-        printf("\n");
-
+        // for(int i = 0; i < 32; i++){
+        //     printf("%d", hashed[i]); //%02x for 16-tg
+        // }
     }
-    return 0;
 }

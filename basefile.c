@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include "basefile.h"
 #include "userhandling.h"
 #include "cryptfiles.h"
+#include "sha-passhash.h"
 
 //Working with HashTable - creating, filling, accessing
 //I use hashset with buckets for storing and quickly accessing all the users. From 0(1) till 0(n/26)=0(n)
@@ -58,12 +60,23 @@ HashTable * createDummyHashTable(HashTable * hashTable, char * filename){
 int main(void) {
     char filename[30] = "wedontstealyourdata.bin"; 
     HashTable * hashTable = createHashTable(); 
+
 //    hashTable = fileReadAllUsers(filename);
 //    hashTable = createDummyHashTable(hashTable, filename);
-    hashTable = fileReadAllUsers(filename);
-    registerUser("Rikaaardo", "hashthispls?no?sad.", hashTable, filename);
-   printAllUsers(hashTable);
-//    fileSaveUsers(hashTable, filename);
+//    hashTable = fileReadAllUsers(filename);
+ 
+    uint8_t hashedPass[32];
+    hashPass("spls", hashedPass);
+    registerUser("Janneta", hashedPass, hashTable, filename);
+    hashPass("parampampam", hashedPass);
+    registerUser("Niko", hashedPass, hashTable, filename);
+    hashPass("lele", hashedPass);
+    registerUser("Kireo", hashedPass, hashTable, filename);
+    hashPass("raaqwertyurwqkpfoqwkwpfoiolre", hashedPass);
+    registerUser("Niks", hashedPass, hashTable, filename);
+
+    printAllUsers(hashTable);
+    fileSaveUsers(hashTable, filename);
     printf("\n\n-the-end-");
     return 0;
 }

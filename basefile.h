@@ -4,8 +4,8 @@
 
 typedef struct User {
     char userName[50];
-    char password[20];
-    char id;
+    char password[97]; //32 by 3 digits (from 8 bits) + \0
+    int id;
 } User;
 
 typedef struct BucketNode {

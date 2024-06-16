@@ -2,7 +2,7 @@
 #define CRYPT_H
 #define KEY "irethinkmylifechoicesrn"
 #define lenKey strlen(KEY)
-#define MAXREAD 200
+#define MAXREAD 300
 
 void vigenereTable(char * original, char * encr);
 void decodeVigenere(char * encr, char * decoded);

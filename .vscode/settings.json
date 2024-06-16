@@ -17,6 +17,9 @@
         "type_traits": "c",
         "vector": "c",
         "iterator": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "stdint.h": "c",
+        "cryptfiles.h": "c",
+        "chrono": "c"
     }
 }
