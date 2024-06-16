@@ -17,7 +17,6 @@ char generateId(HashTable * table) {
 //inits a new user. Username and pass - should be defined, ID could be NULL 
 User * createUser(char * userName, char * password, int * id, HashTable * hashTable) {
     if(userName == "") {
-        printf("Error: Cannot create user - username error");
         return NULL;
     }
     User * newUser = (User * )malloc(sizeof(User));
@@ -85,34 +84,27 @@ void printAllUsers(HashTable * hashTable){
     for (int i = 0; i < TABLE_SIZE; i++) {
         BucketNode * current = hashTable->buckets[i];
         for(int depth = 0; current != NULL; depth++) {
-            printf("Bucket Index: %d; Depth: %d;  UserName: %s; ID: %d; ", i, depth, current->user->userName, current->user->id);
-            for(int i = 0; i < 96; i++){
-                printf("%c", current->user->password[i]);
-            }
-            printf("\n");
+            printf("Bucket Index: %d; Depth: %d;  UserName: %s; ID: %d; Password: %s\n", i, depth, current->user->userName, current->user->id, current->user->password);
             current = current->next;
         }
     }
 }
 
 //Functions for menu
-void registerUser(char * username, uint8_t * password, HashTable * hashTable, char * filename){
+User * registerUser(char * username, uint8_t * password, HashTable * hashTable, char * filename){
     if(username != NULL && searchUser(hashTable, username) != NULL) {
         printf("Error: Cannot save user with existing name or username undefined - %s \n", username);
-        return;
+        return NULL;
     }
-    printf("Registering\n");
     char passchar[96];
     int passcharind = 0;
     for (int i = 0; i < 32; i++) {
         passcharind += sprintf(passchar + passcharind, "%03d", password[i]);
     }
     User * newuser = createUser(username, passchar, NULL, hashTable);
-    printf("  Created user\n");
     fileAddUser(hashTable, filename, newuser);
-    printf(" Added to file\n");
     insertUser(hashTable, newuser);
-    printf("  Inserted to hashtable\n");
+    return newuser;
 }
 
 //Working with files - r, w, a
@@ -147,22 +139,15 @@ void fileAddUser(HashTable * hashTable, char * filename, User * current){
             return;
         }
     }
-    printf("    Opened file\n");
     char toBeEncrypted[MAXREAD];
     char encrypted[MAXREAD];
     int offset = 0;
-    printf("    Init completed\n");
     offset += snprintf(toBeEncrypted + offset, MAXREAD - offset, "%d|%s|", current->id, current->userName);
-    printf("    Added id and username\n");
     for(int i = 0; i < 96; i++){
         offset += snprintf(toBeEncrypted + offset, MAXREAD - offset, "%c", current->password[i]);
     }
-    printf("    Added pass\n");
-    printf("    Encrypting\n");
     vigenereTable(toBeEncrypted, encrypted);
-    printf("    Encrypted\n");
     fprintf(fptr, "%s\n", encrypted);
-    printf("    Saved to file\n");
 
     fclose(fptr);
 }
