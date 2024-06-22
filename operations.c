@@ -1,34 +1,10 @@
 #include <stdio.h>
-#include "operations.h"
-
 #include <stdlib.h>
 #include <string.h>
 
-void transaction_func(transaction *trans){
-
-}
-
-void deposit(bank_account *b_account, unsigned int amount) {
-    if (amount > 0) {
-        b_account->balance += amount;
-        printf("Successfully deposited %u. New balance: %u\n", amount, b_account->balance); 
-    }else{
-        printf("Deposit amount must be positive.\n");
-    }
-}
-
-void withdrawals(bank_account *b_account, unsigned int amount) {
-    if(amount > 0){
-        if (b_account->balance >= amount) {
-            b_account->balance -= amount;
-            printf("Successfully withdrew %u. New balance: %u\n", amount, b_account->balance);
-        }else{ 
-            printf("Insufficient balance.\n");
-        }
-    }else{
-        printf("Withdrawal amount must be positive.\n");
-    } 
-}
+#include "operations.h"
+#include "transaction_list.c"
+#include "transactions.txt"
 
 void generate_random_account_number(char *account_number, int length) {
     static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -73,4 +49,70 @@ void generate_iban(char *iban) {
     int checksum = 98 - calculate_checksum(initial_iban);
 
     snprintf(iban, 30, "%s%02d%s%s", COUNTRY_CODE, checksum, BANK_CODE, account_number);
+}
+
+double round_two_decimal_places(double value){
+    double scale = pow(10, 2);
+    return round(value * scale) / scale;
+}
+
+void deposit(bank_account *b_account, double amount) {
+    amount = round_two_decimal_places(amount);
+
+    if(amount > 0) {
+        b_account->balance += amount;
+        printf("Successfully deposited %u. New balance: %u\n", amount, b_account->balance); 
+    }else{
+        printf("Deposit amount must be positive.\n");
+    }
+}
+
+void withdrawals(bank_account *b_account, double amount) {
+    amount = round_two_decimal_places(amount);
+
+    if(amount > 0){
+        if (b_account->balance >= amount) {
+            b_account->balance -= amount;
+            printf("Successfully withdrew %u. New balance: %u\n", amount, b_account->balance);
+        }else{ 
+            printf("Insufficient balance.\n");
+        }
+    }else{
+        printf("Withdrawal amount must be positive.\n");
+    } 
+}
+
+void transaction_func(transaction_queue *queue, bank_account *sender, bank_account *receiver, transaction *trans) {
+    trans->amount = round_two_decimal_places(trans->amount);
+
+    if (sender->balance >= trans->amount) {
+        sender->balance -= trans->amount;
+        receiver->balance += trans->amount;
+        
+        trans->status = 'C';
+        printf("Transaction completed successfully.\n");
+    } else {
+        trans->status = 'F';
+        printf("Transaction failed: insufficient funds.\n");
+        return;
+    }
+
+    save_transaction(queue);
+}
+
+void save_transaction(transaction_queue *queue) {
+    FILE *fp = fopen("transactions.txt", "w");
+    if (fp == NULL) {
+        printf("Error opening file\n");
+        return;
+    }
+
+    transaction_node *current = queue->head;
+    while (current != NULL) {
+        transaction *trans = current->trans;
+        fprintf(fp, "%c|%s|%.2f|%d|%d\n", trans->status, trans->key, trans->amount, trans->senderID, trans->receiverID);
+        current = current->next;
+    }
+
+    fclose(fp);
 }
