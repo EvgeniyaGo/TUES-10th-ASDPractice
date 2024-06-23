@@ -6,6 +6,7 @@
 #include "userhandling.h"
 #include "cryptfiles.h"
 #include "sha-passhash.h"
+#include "operations.h"
 
 //Working with HashTable - creating, filling, accessing
 //I use hashset with buckets for storing and quickly accessing all the users. From 0(1) till 0(n/26)=0(n)
@@ -65,35 +66,35 @@ void hashPassToString(uint8_t * password, char * passchar){
     }
 }
 
-int canlogin(HashTable * hashTable, char * username, char * password){
+User *  canlogin(HashTable * hashTable, char * username, char * password){
     User * foundUser = searchUser(hashTable, username);
     if(foundUser == NULL) {
         printf("Cannot find user\n");
-        return 0;
+        return NULL;
     }
     char pass[97];
     preppass(password, pass);
     if (strcmp(foundUser->password, pass) != 0) {
         printf("Password doesn't match\n");
-        return 0;
+        return NULL;
     }
-    return 1;
+    return foundUser;
 }
 
-void dummyMenu(HashTable *hashTable, int logged, char * filename) {
+void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, char * banksfilename) {
     char choice;
-    if (logged == 0) {
+    
+    if (loggedRightNow == NULL) {
         do {
             printf("1. Login; 2. Register; 3. Exit\n\nChoice: ");
             scanf(" %c", &choice);
-            while (getchar() != '\n'); // Clear the input buffer
+            while (getchar() != '\n');
         } while (choice < '1' || choice > '3');
 
         if (choice == '1') {
             printf("Login\n");
             char username[50];
             char password[32];
-            int logged = 0;
 
             do {
                 printf("Enter username: ");
@@ -104,23 +105,29 @@ void dummyMenu(HashTable *hashTable, int logged, char * filename) {
                 fgets(password, sizeof(password), stdin);
                 password[strcspn(password, "\n")] = 0;
 
-                logged = canlogin(hashTable, username, password);
-                if (logged) printf("Login successful!\n");
-            }while(logged != 1);
+                loggedRightNow = canlogin(hashTable, username, password);
+                if (loggedRightNow != NULL) {
+                    printf("Login successful!\n");
+                } else {
+                    printf("Invalid username or password\n");
+                }
+            } while (loggedRightNow == NULL);
         } else if (choice == '2') {
             char username[50];
             char password[32];
-            User *newUser;
+            printf("Register\n");
+            
             printf("Enter username: ");
             fgets(username, sizeof(username), stdin);
-            username[strcspn(username, "\n")] = 0; 
+            username[strcspn(username, "\n")] = 0;
+
             printf("Enter password: ");
             fgets(password, sizeof(password), stdin);
-            password[strcspn(password, "\n")] = 0; 
-            newUser = registerUser(username, password, hashTable, filename);
-            if (newUser != NULL) {
-                printf("Registration successful for user: %s\n", newUser->userName);
-                logged = 1;
+            password[strcspn(password, "\n")] = 0;
+
+            loggedRightNow = registerUser(username, password, hashTable, filename);
+            if (loggedRightNow != NULL) {
+                printf("Registration successful for user: %s\n", loggedRightNow->userName);
             } else {
                 printf("Registration failed\n");
             }
@@ -128,22 +135,54 @@ void dummyMenu(HashTable *hashTable, int logged, char * filename) {
             printf("\n[!] Ending program\n");
             exit(0);
         }
+    } else {
+        printf("Hello, %s!\n", loggedRightNow->userName);
+        printf("You can do money stuff\n");
+        
+        bank_account * loggedBank = registerBankAccount(loggedRightNow->id, banksfilename);
+        do {
+            printf("\n1. Deposit; 2. Withdraw; 3. Transfer; 4. Process Transactions; 5. Logout\n");
+            printf("Choice: ");
+            scanf(" %c", &choice);
+            while (getchar() != '\n');
+
+            if(choice == '1') {
+                deposit(loggedBank, 10.00); 
+                printf("  %f\n", loggedBank->balance);
+                break;
+            }
+            if(choice == '2') {
+                withdrawals(loggedBank, -10.00); 
+                printf("  %f\n", loggedBank->balance);
+                break;
+            }
+            if(choice == '3') {
+            }
+            if(choice == '4') {
+            }
+            if(choice == '5') {
+                    printf("Logging out %s\n", loggedRightNow->userName);
+                    loggedRightNow = NULL;
+            }
+        } while (choice != '5');
     }
-    else{
-        printf("You can now money things\n");
-    }
+    printf("\n\n\nMenu:\n");
+    dummyMenu(hashTable, loggedRightNow, filename, banksfilename); 
 }
 
+
 int main(void) {
+    printf("HI!");
     char filename[30] = "wedontstealyourdata.bin"; 
+    char banksfilename[30] = "banksfilename.bin"; 
     HashTable * hashTable = createHashTable(); 
 //    dummyMenu(hashTable, 0);
     hashTable = fileReadAllUsers(filename);
     // printAllUsers(hashTable);
 //     printf("creating-\n");
   //  createDummyHashTable(hashTable, filename);
-    //printf("dummy-\n");
-    dummyMenu(hashTable, 0, filename);
+    printf("dummy-\n");
+    dummyMenu(hashTable, 0, filename, banksfilename);
     //fileSaveUsers(hashTable, filename);
     printf("\n\nwell it didnt die");
     return 0;

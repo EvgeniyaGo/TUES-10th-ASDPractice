@@ -4,11 +4,11 @@
 #define COUNTRY_CODE "BG"
 #define BANK_CODE "BNBG"
 
-typedef struct bank_account{
+typedef struct bank_account {
     char iban[30];
     double balance;
-    int ID;
-}bank_account;
+    char ID[5];
+} bank_account;
 
 void generate_random_account_number(char *account_number, int length);
 int calculate_checksum(const char *iban);
@@ -19,15 +19,15 @@ void withdrawals(bank_account *b_account, double amount);
 
 // Transactions
 
-typedef struct transaction{
+typedef struct transaction {
     char status;
     char key[20];
     double amount;
-    int senderID;
-    int receiverID;
-}transaction;
+    char senderID[5];    
+    char receiverID[5];  
+} transaction;
 
-typedef struct transaction_node{
+typedef struct transaction_node {
     transaction *trans;
     struct transaction_node *next;
 } transaction_node;
@@ -44,5 +44,11 @@ void free_queue(transaction_queue *queue);
 
 void transaction_func(transaction_queue *queue, bank_account *sender, bank_account *receiver, transaction *trans);
 void save_transaction(transaction_queue *queue);
+
+bank_account * findAccountByIDFromFile(char * filename, char * ID);
+bank_account * registerBankAccount(char *ID, char * filename);
+void fileAddBankAccount(bank_account *bAccount, char *filename);
+bank_account * createBankAccount(char * ID);
+
 
 #endif

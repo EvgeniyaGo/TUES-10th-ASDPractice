@@ -8,7 +8,7 @@
 #include "sha-passhash.h"
 
 
-void generateId(HashTable *table, char *id) {
+void generateId(HashTable * table, char * id) {
     const char charset[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const size_t charsetSize = sizeof(charset) - 1; 
 

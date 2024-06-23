@@ -37,8 +37,8 @@ void create_transaction(transaction_queue *queue, char *key, double amount, bank
     new_trans->status = 'U';
     strcpy(new_trans->key, key);
     new_trans->amount = amount;
-    new_trans->senderID = sender->ID;
-    new_trans->receiverID = receiver->ID;
+    strncpy(new_trans->senderID, sender->ID, 5); 
+    strncpy(new_trans->receiverID, receiver->ID, 5); 
 
     enqueue(queue, new_trans);
     save_transaction(queue);

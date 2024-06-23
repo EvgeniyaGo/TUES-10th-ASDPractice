@@ -6,7 +6,9 @@
 #include "operations.h"
 #include "transaction_list.h"
 #include "userhandling.h"
+#include "cryptfiles.h"
 
+#define MAXREAD_O 200
 
 void generate_random_account_number(char *account_number, int length) {
     static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -58,7 +60,7 @@ double round_two_decimal_places(double value){
     return round(value * scale) / scale;
 }
 
-void deposit(bank_account *b_account, double amount) {
+void deposit(bank_account * b_account, double amount) {
     amount = round_two_decimal_places(amount);
 
     if(amount > 0) {
@@ -112,9 +114,91 @@ void save_transaction(transaction_queue *queue) {
     transaction_node *current = queue->head;
     while (current != NULL) {
         transaction *trans = current->trans;
-        fprintf(fp, "%c|%s|%.2f|%d|%d\n", trans->status, trans->key, trans->amount, trans->senderID, trans->receiverID);
+        fprintf(fp, "%c|%s|%.2f|%s|%s\n", trans->status, trans->key, trans->amount, trans->senderID, trans->receiverID);
         current = current->next;
     }
 
     fclose(fp);
+}
+
+
+
+
+bank_account * createBankAccount(char * ID) {
+    bank_account * bAccount = (bank_account *)malloc(sizeof(bank_account));
+    generate_iban(bAccount->iban);
+    bAccount->balance = 0.0;
+    strncpy(bAccount->ID, ID, 5);
+    bAccount->ID[4] = '\0'; 
+    return bAccount;
+}
+
+void fileAddBankAccount(bank_account * bAccount, char  *filename) {
+    FILE * fptr;
+    fptr = fopen(filename, "a");
+    if (fptr == NULL) {
+        fptr = fopen(filename, "w");
+        if (fptr == NULL) {
+            printf("Error: Cannot create file %s\n", filename);
+            return;
+        }
+    }
+    char toBeEncrypted[MAXREAD_O];
+    char encrypted[MAXREAD_O];
+    snprintf(toBeEncrypted, MAXREAD_O, "%s|%.2f|%s", bAccount->iban, bAccount->balance, bAccount->ID);
+    vigenereTable(toBeEncrypted, encrypted);
+    fprintf(fptr, "%s\n", encrypted);
+    fclose(fptr);
+}
+
+bank_account * findAccountByIDFromFile(char * filename, char * ID) {
+    FILE *fptr;
+    fptr = fopen(filename, "r");
+    if (fptr == NULL) {
+        printf("Error opening file %s\n", filename);
+        return NULL;
+    }
+
+    char toBeDecrypted[MAXREAD_O];
+    char myString[MAXREAD_O];
+
+    while (fgets(toBeDecrypted, MAXREAD_O, fptr)) {
+        decodeVigenere(toBeDecrypted, myString);
+        char fileID[5];
+        char iban[30];
+        double balance;
+        char * token;
+
+        token = strtok(myString, "|");
+        if (token != NULL) strncpy(iban, token, sizeof(iban) - 1);
+        token = strtok(NULL, "|");
+        if (token != NULL) balance = atof(token);
+        token = strtok(NULL, "\n");
+        if (token != NULL) strncpy(fileID, token, sizeof(fileID) - 1);
+        if (strcmp(ID, fileID) == 0) {
+            bank_account * account = (bank_account *)malloc(sizeof(bank_account));
+            if (account == NULL) {
+                printf("Memory allocation failed\n");
+                fclose(fptr);
+                return NULL;
+            }
+            strncpy(account->ID, fileID, sizeof(account->ID) - 1);
+            account->balance = balance;
+            strncpy(account->iban, iban, sizeof(account->iban) - 1);
+
+            fclose(fptr);
+            return account;
+        }
+    }
+
+    fclose(fptr);
+    printf("Account with ID %s must be created\n", ID);
+    return NULL;
+}
+
+bank_account * registerBankAccount(char *ID, char * filename) {
+    if(findAccountByIDFromFile(filename, ID) != NULL) return findAccountByIDFromFile(filename, ID);
+    bank_account * bAccount = createBankAccount(ID);
+    fileAddBankAccount(bAccount, filename);
+    return bAccount;
 }
