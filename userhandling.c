@@ -6,26 +6,40 @@
 #include "userhandling.h"
 #include "cryptfiles.h"
 
-char generateId(HashTable * table) {
-    char random;
-    do{
-        random = rand(); 
-    } while(searchUserById(table, random) != NULL);
-    return random;
+
+void generateId(HashTable *table, char *id) {
+    const char charset[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const size_t charsetSize = sizeof(charset) - 1; 
+
+    do {
+        for (int i = 0; i < ID_LENGTH - 1; i++) {
+            int randomIndex = rand() % charsetSize;
+            id[i] = charset[randomIndex];
+        }
+        id[ID_LENGTH - 1] = '\0';  
+    } while (searchUserById(table, id) != NULL);
 }
 
+
 //inits a new user. Username and pass - should be defined, ID could be NULL 
-User * createUser(char * userName, char * password, int * id, HashTable * hashTable) {
-    if(userName == "") {
+User * createUser(char * userName, char * password, char * id, HashTable * hashTable) {
+    if (userName == NULL) {
         return NULL;
     }
-    User * newUser = (User * )malloc(sizeof(User));
+    User *newUser = (User *)malloc(sizeof(User));
     strcpy(newUser->userName, userName);
     strcpy(newUser->password, password);
-    if(id == NULL) newUser->id = generateId(hashTable);
-    else newUser->id = * id;
+    if (id == "" || id == NULL) {
+        char newid[5];
+        generateId(hashTable, newid);
+        strcpy(newUser->id, newid);
+    } else {
+        strcpy(newUser->id, id);
+    }
     return newUser;
 }
+
+
 
 //searchUser works with hashset and searches in it by username
 User * searchUser(HashTable * table, char * username) {
@@ -43,11 +57,11 @@ User * searchUser(HashTable * table, char * username) {
 }
 
 //searchId works with hashset and searches in it by ID
-User * searchUserById(HashTable * table, char id) {
+User * searchUserById(HashTable *table, char * id) {
     for (int i = 0; i < TABLE_SIZE; i++) {
-        BucketNode * current = table->buckets[i];
-        for(int depth = 0; current != NULL; depth++) {
-            if(current->user->id == id){
+        BucketNode *current = table->buckets[i];
+        while (current != NULL) {
+            if (strcmp(current->user->id, id) == 0) {
                 return current->user;
             }
             current = current->next;
@@ -84,7 +98,7 @@ void printAllUsers(HashTable * hashTable){
     for (int i = 0; i < TABLE_SIZE; i++) {
         BucketNode * current = hashTable->buckets[i];
         for(int depth = 0; current != NULL; depth++) {
-            printf("Bucket Index: %d; Depth: %d;  UserName: %s; ID: %d; Password: %s\n", i, depth, current->user->userName, current->user->id, current->user->password);
+            printf("Bucket Index: %d; Depth: %d;  UserName: %s; ID: %s; Password: %s\n", i, depth, current->user->userName, current->user->id, current->user->password);
             current = current->next;
         }
     }
@@ -96,7 +110,8 @@ User * registerUser(char * username, uint8_t * password, HashTable * hashTable, 
         printf("Error: Cannot save user with existing name or username undefined - %s \n", username);
         return NULL;
     }
-    char passchar[96];
+    char passchar[97];
+    passchar[96] = '\0';
     int passcharind = 0;
     for (int i = 0; i < 32; i++) {
         passcharind += sprintf(passchar + passcharind, "%03d", password[i]);
@@ -121,7 +136,7 @@ void fileSaveUsers(HashTable * hashTable, char * filename){
         for(int depth = 0; current != NULL; depth++) {
             char toBeEncrypted[MAXREAD];
             char encrypted[MAXREAD];
-            snprintf(toBeEncrypted, MAXREAD, "%d|%s|%s", current->user->id, current->user->userName, current->user->password);
+            snprintf(toBeEncrypted, MAXREAD, "%s|%s|%s", current->user->id, current->user->userName, current->user->password);
             vigenereTable(toBeEncrypted, encrypted);
             fprintf(fptr, "%s\n", encrypted);
             current = current->next;
@@ -142,10 +157,7 @@ void fileAddUser(HashTable * hashTable, char * filename, User * current){
     char toBeEncrypted[MAXREAD];
     char encrypted[MAXREAD];
     int offset = 0;
-    offset += snprintf(toBeEncrypted + offset, MAXREAD - offset, "%d|%s|", current->id, current->userName);
-    for(int i = 0; i < 96; i++){
-        offset += snprintf(toBeEncrypted + offset, MAXREAD - offset, "%c", current->password[i]);
-    }
+    offset += snprintf(toBeEncrypted + offset, MAXREAD - offset, "%s|%s|%s", current->id, current->userName, current->password);
     vigenereTable(toBeEncrypted, encrypted);
     fprintf(fptr, "%s\n", encrypted);
 
@@ -165,18 +177,18 @@ HashTable *fileReadAllUsers(char *filename) {
 
     while (fgets(toBeDecrypted, MAXREAD, fptr)) {
         decodeVigenere(toBeDecrypted, myString);
-        int id;
+        char id[5];
         char name[50] = {0};
         char pass[97] = {0}; //32 by 3 digits (from 8 bits) + \0
         char *token;
 
         token = strtok(myString, "|");
-        if (token != NULL) id = atoi(token);
+        if (token != NULL) strncpy(id, token, sizeof(id) - 1);
         token = strtok(NULL, "|");
         if (token != NULL) strncpy(name, token, sizeof(name) - 1);
         token = strtok(NULL, "\n");
         if (token != NULL) strncpy(pass, token, sizeof(pass) - 1);  
-        User *newuser = createUser(name, pass, &id, hashTable); 
+        User *newuser = createUser(name, pass, id, hashTable); 
         insertUser(hashTable, newuser);
     }
 

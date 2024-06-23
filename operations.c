@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "operations.h"
-#include "transaction_list.c"
-#include "transactions.txt"
+#include "transaction_list.h"
+#include "userhandling.h"
+
 
 void generate_random_account_number(char *account_number, int length) {
     static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";

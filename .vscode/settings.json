@@ -20,6 +20,11 @@
         "xutility": "c",
         "stdint.h": "c",
         "cryptfiles.h": "c",
-        "chrono": "c"
+        "chrono": "c",
+        "transaction_list.h": "c",
+        "operations.h": "c",
+        "cmath": "c",
+        "math.h": "c",
+        "sstream": "c"
     }
 }
