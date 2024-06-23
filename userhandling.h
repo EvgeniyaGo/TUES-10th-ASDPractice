@@ -9,7 +9,7 @@ User * createUser(char * userName, char * password, char * id, HashTable * hashT
 User * searchUser(HashTable * table, char * username);
 void insertUser(HashTable * table, User * user);
 void printAllUsers(HashTable * hashTable);
-User * registerUser(char * username, uint8_t * password, HashTable * hashTable, char * filename);
+User * registerUser(char * username, char * password, HashTable * hashTable, char * filename);
 void fileSaveUsers(HashTable * hashTable, char * filename);
 void fileAddUser(HashTable * hashTable, char * filename, User * current);
 HashTable * fileReadAllUsers(char * filename);

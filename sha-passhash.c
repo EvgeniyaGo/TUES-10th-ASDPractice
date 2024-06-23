@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "sha-passhash.h"
 
 #define RIGHTROTATE(x, n) (((x) >> (n)) | ((x) << (32 - (n))))
 
-void hashUsingSHA(uint8_t *message, uint8_t hashed[32]) {
+// Hash function using SHA
+void hashUsingSHA(uint8_t * message, uint8_t hashed[32]) {
     uint32_t hashValues[8] = {
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
         0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
@@ -28,25 +28,26 @@ void hashUsingSHA(uint8_t *message, uint8_t hashed[32]) {
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     };
-    uint32_t words[64];
+    uint32_t words[64] = {0};
     uint32_t a, b, c, d, e, f, g, h;
 
-    int messageLen = strlen(message); 
+    int messageLen = strlen((char *)message); 
     uint8_t chunk[64] = {0};
     for (int i = 0; i < messageLen; i++) {
         chunk[i] = message[i];
     }
-    chunk[messageLen] = (1 << 7) | chunk[messageLen]; //adds 1000-0000 ('1')
+    chunk[messageLen] = 0x80; // Add the '1' bit
+
     uint64_t totalL = messageLen * 8;
     for (int i = 0; i < 8; i++) {
         chunk[63 - i] = (totalL >> (i * 8)) & 0xff;
     }
 
-    for (int i = 0; i < messageLen; i++) { // Chunk into 32-bit words - needed cause word is 32*64 and chunk is 8*64. We just move 101 like 100... 000... 100...
-        words[i] = (chunk[i * 4] << 24) | (chunk[i * 4 + 1] << 16) | (chunk[i * 4 + 2] << 8) | chunk[i * 4 + 3];        
+    for (int i = 0; i < 16; i++) { // Chunk into 32-bit words
+        words[i] = (chunk[i * 4] << 24) | (chunk[i * 4 + 1] << 16) | (chunk[i * 4 + 2] << 8) | chunk[i * 4 + 3];
     }
 
-    for (int i = 16; i < 64; i++) { // Extend the first 16 words into the remaining 48 words
+    for (int i = 16; i < 64; i++) { // Add the last 48 words
         uint32_t s0 = RIGHTROTATE(words[i - 15], 7) ^ RIGHTROTATE(words[i - 15], 18) ^ (words[i - 15] >> 3);
         uint32_t s1 = RIGHTROTATE(words[i - 2], 17) ^ RIGHTROTATE(words[i - 2], 19) ^ (words[i - 2] >> 10);
         words[i] = words[i - 16] + s0 + words[i - 7] + s1;
@@ -63,7 +64,7 @@ void hashUsingSHA(uint8_t *message, uint8_t hashed[32]) {
 
     for (int i = 0; i < 64; i++) { // Compression  
         uint32_t S1 = RIGHTROTATE(e, 6) ^ RIGHTROTATE(e, 11) ^ RIGHTROTATE(e, 25);
-        uint32_t ch = (e & f) ^ ((~e) & g); //not e - first time needing it, lol
+        uint32_t ch = (e & f) ^ ((~e) & g);
         uint32_t temp1 = h + S1 + ch + roundConstants[i] + words[i];
         uint32_t S0 = RIGHTROTATE(a, 2) ^ RIGHTROTATE(a, 13) ^ RIGHTROTATE(a, 22);
         uint32_t maj = (a & b) ^ (a & c) ^ (b & c);
@@ -89,31 +90,31 @@ void hashUsingSHA(uint8_t *message, uint8_t hashed[32]) {
     hashValues[7] += h;
 
     for (int i = 0; i < 8; i++) { // Final hash append
-        hashed[i * 4] = (hashValues[i] >> 24);
-        hashed[i * 4 + 1] = (hashValues[i] >> 16);
-        hashed[i * 4 + 2] = (hashValues[i] >> 8);
-        hashed[i * 4 + 3] = hashValues[i];
+        hashed[i * 4] = (hashValues[i] >> 24) & 0xff;
+        hashed[i * 4 + 1] = (hashValues[i] >> 16) & 0xff;
+        hashed[i * 4 + 2] = (hashValues[i] >> 8) & 0xff;
+        hashed[i * 4 + 3] = hashValues[i] & 0xff;
     }
 }
 
-int digitSum(int number) {
-    int sum = 0;
-    while (number != 0) {
-        sum += number % 10;
-        number /= 10;
-    }
-    return sum;
-}
-
-void hashPass(char * message, uint8_t * hashed) {
-    if(strlen(message) >= 64){
-        printf("Error Message too long");
+void hashPass(char * message, uint8_t *hashed) {
+    if (strlen(message) >= 64) {
+        printf("Error: Message too long\n");
         return;
-    }
-    else{
-        hashUsingSHA(message, hashed);
-        // for(int i = 0; i < 32; i++){
-        //     printf("%d", hashed[i]); //%02x for 16-tg
-        // }
+    } else {
+        hashUsingSHA((uint8_t * )message, hashed);
     }
 }
+
+// Function to convert hash to password
+void preppass(char *string, char *password) {
+    uint8_t hashedPass[32];
+    hashPass(string, hashedPass);
+    int index = 0;
+    for (int i = 0; i < 32; i++) {
+        snprintf(&password[index], 4, "%03d", hashedPass[i]);
+        index += 3;
+    }
+    password[96] = '\0';
+}
+

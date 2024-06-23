@@ -5,6 +5,7 @@
 #include "basefile.h"
 #include "userhandling.h"
 #include "cryptfiles.h"
+#include "sha-passhash.h"
 
 
 void generateId(HashTable *table, char *id) {
@@ -105,18 +106,14 @@ void printAllUsers(HashTable * hashTable){
 }
 
 //Functions for menu
-User * registerUser(char * username, uint8_t * password, HashTable * hashTable, char * filename){
+User * registerUser(char * username, char * password, HashTable * hashTable, char * filename){
     if(username != NULL && searchUser(hashTable, username) != NULL) {
         printf("Error: Cannot save user with existing name or username undefined - %s \n", username);
         return NULL;
     }
-    char passchar[97];
-    passchar[96] = '\0';
-    int passcharind = 0;
-    for (int i = 0; i < 32; i++) {
-        passcharind += sprintf(passchar + passcharind, "%03d", password[i]);
-    }
-    User * newuser = createUser(username, passchar, NULL, hashTable);
+    char pass[97];
+    preppass(password, pass);
+    User * newuser = createUser(username, pass, NULL, hashTable);
     fileAddUser(hashTable, filename, newuser);
     insertUser(hashTable, newuser);
     return newuser;

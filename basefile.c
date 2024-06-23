@@ -45,10 +45,7 @@ HashTable * createDummyHashTable(HashTable * hashTable, char * filename){
     };
 
     for (int i = 0; i < 5; i++) {
-        uint8_t hashedpass[97];
-        hashedpass[96] = '\0';
-        hashPass(passwords[i], hashedpass);
-        registerUser(names[i], hashedpass, hashTable, filename);
+        registerUser(names[i], passwords[i], hashTable, filename);
     }
     return hashTable;
 }
@@ -71,30 +68,19 @@ void hashPassToString(uint8_t * password, char * passchar){
 int canlogin(HashTable * hashTable, char * username, char * password){
     User * foundUser = searchUser(hashTable, username);
     if(foundUser == NULL) {
-        printf("Cannot find it.\n");
+        printf("Cannot find user\n");
         return 0;
     }
-    printf("%s", password);
-    uint8_t hashedpass[32] = {0};
-    char passchar[97];
-    hashPass(password, hashedpass);
-    hashPassToString(hashedpass, passchar);
-    printf("   %s\n", passchar);
-    uint8_t hashedpass2[32] = {0};
-    char passchar2[97];
-    hashPass(password, hashedpass2);
-    hashPassToString(hashedpass2, passchar2);
-    printf("   %s\n", passchar2);
-    // Compare passwords
-    if (strcmp(foundUser->password, hashedpass) != 0) {
-        printf("Password doesn't match.\n");
+    char pass[97];
+    preppass(password, pass);
+    if (strcmp(foundUser->password, pass) != 0) {
+        printf("Password doesn't match\n");
         return 0;
     }
-
     return 1;
 }
 
-void dummyMenu(HashTable *hashTable, int logged) {
+void dummyMenu(HashTable *hashTable, int logged, char * filename) {
     char choice;
     if (logged == 0) {
         do {
@@ -116,69 +102,49 @@ void dummyMenu(HashTable *hashTable, int logged) {
 
                 printf("Enter password: ");
                 fgets(password, sizeof(password), stdin);
-                password[strcspn(password, "\n")] = 0; // Remove newline character
+                password[strcspn(password, "\n")] = 0;
 
                 logged = canlogin(hashTable, username, password);
                 if (logged) printf("Login successful!\n");
             }while(logged != 1);
         } else if (choice == '2') {
-            printf("Register\n");
-            logged = 1;
+            char username[50];
+            char password[32];
+            User *newUser;
+            printf("Enter username: ");
+            fgets(username, sizeof(username), stdin);
+            username[strcspn(username, "\n")] = 0; 
+            printf("Enter password: ");
+            fgets(password, sizeof(password), stdin);
+            password[strcspn(password, "\n")] = 0; 
+            newUser = registerUser(username, password, hashTable, filename);
+            if (newUser != NULL) {
+                printf("Registration successful for user: %s\n", newUser->userName);
+                logged = 1;
+            } else {
+                printf("Registration failed\n");
+            }
         } else if (choice == '3') {
-            printf("\n[!] Ending program.\n");
+            printf("\n[!] Ending program\n");
             exit(0);
         }
     }
+    else{
+        printf("You can now money things\n");
+    }
 }
-
 
 int main(void) {
     char filename[30] = "wedontstealyourdata.bin"; 
-//     HashTable * hashTable = createHashTable(); 
-// //    dummyMenu(hashTable, 0);
-//     hashTable = fileReadAllUsers(filename);
-//     printAllUsers(hashTable);
+    HashTable * hashTable = createHashTable(); 
+//    dummyMenu(hashTable, 0);
+    hashTable = fileReadAllUsers(filename);
+    // printAllUsers(hashTable);
 //     printf("creating-\n");
-// //    createDummyHashTable(hashTable, filename);
-//     printf("dummy-\n");
-//     dummyMenu(hashTable, 0);
-// //    fileSaveUsers(hashTable, filename);
-
-
-    uint8_t hashedPass[32];
-    hashPass("securepass", hashedPass);
-    uint8_t hashedPass2[32];
-    hashPass("securepass", hashedPass2);
-    uint8_t hashedPass3[32];
-    hashPass("securepass", hashedPass3);
-    printf("\n1. ");
-    for (int i = 0; i < 32; i++) {
-        printf("%02x", hashedPass[i]);
-    }
-    char password[97];
-    int index = 0;
-    for (int i = 0; i < 32; i++) {
-        snprintf(&password[index], 4, "%03d", hashedPass3[i]);
-        index += 3;
-    }
-    password[96] = '\0';
-    printf("\n  %s\n", password);
-
-
-    printf("\n2. ");
-    for (int i = 0; i < 32; i++) {
-        printf("%02x", hashedPass2[i]);
-    }
-    char password2[97];
-    index = 0;
-    for (int i = 0; i < 32; i++) {
-        snprintf(&password2[index], 4, "%03d", hashedPass3[i]);
-        index += 3;
-    }
-    password2[96] = '\0';
-    printf("\n  %s\n", password2);
-
-
-    printf("\n\n-the-end-");
+  //  createDummyHashTable(hashTable, filename);
+    //printf("dummy-\n");
+    dummyMenu(hashTable, 0, filename);
+    //fileSaveUsers(hashTable, filename);
+    printf("\n\nwell it didnt die");
     return 0;
 }
