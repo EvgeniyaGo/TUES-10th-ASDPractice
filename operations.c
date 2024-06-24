@@ -101,10 +101,10 @@ void transaction_func(transaction_queue *queue, bank_account *sender, bank_accou
         return;
     }
 
-    save_transaction(queue);
+    save_transactions(queue);
 }
 
-void save_transaction(transaction_queue *queue) {
+void save_transactions(transaction_queue *queue) {
     FILE *fp = fopen("transactions.txt", "w");
     if (fp == NULL) {
         printf("Error opening file\n");
@@ -161,7 +161,7 @@ void transaction_processing(char *filename, transaction_queue *queue){
         }
         current = current->next;
     }
-    save_transaction(queue);
+    save_transactions(queue);
 }
 
 
@@ -243,6 +243,52 @@ bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
     }
 
     fclose(fptr);
+    return NULL;
+}
+
+bank_account * findAccountByIDFromFile(char * filename, char * ID) {
+    FILE *fptr;
+    fptr = fopen(filename, "r");
+    if (fptr == NULL) {
+        printf("Error opening file %s\n", filename);
+        printf("Error: cannot open file %s\n", filename);
+        return NULL;
+    }
+
+    char toBeDecrypted[MAXREAD_O];
+    char myString[MAXREAD_O];
+    while (fgets(toBeDecrypted, MAXREAD_O, fptr)) {
+        decodeVigenere(toBeDecrypted, myString);
+        char fileID[5];
+        char iban[30];
+        double balance;
+        char * token;
+        token = strtok(myString, "|");
+        if (token != NULL) strncpy(iban, token, sizeof(iban) - 1);
+        token = strtok(NULL, "|");
+        if (token != NULL) balance = atof(token);
+        token = strtok(NULL, "\n");
+        if (token != NULL) strncpy(fileID, token, sizeof(fileID) - 1);
+        if (strcmp(ID, fileID) == 0) {
+            bank_account * account = (bank_account *)malloc(sizeof(bank_account));
+            if (account == NULL) {
+                printf("Memory allocation failed\n");
+                printf("Error: Memory allocation failed\n");
+                fclose(fptr);
+                return NULL;
+            }
+            strncpy(account->ID, fileID, sizeof(account->ID) - 1);
+            account->balance = balance;
+            strncpy(account->iban, iban, sizeof(account->iban) - 1);
+
+            account->ID[4] = '\0';
+            fclose(fptr);
+            return account;
+        }
+    }
+
+    fclose(fptr);
+    printf("Account with ID %s must be created\n", ID);
     return NULL;
 }
 

@@ -213,7 +213,7 @@ int main(void) {
     char banksfilename[30] = "banksfilename.bin"; 
     HashTable * hashTable = createHashTable(); 
     transaction_queue *queue;
-    init_queue(&queue);
+    init_queue(queue);
 //    dummyMenu(hashTable, 0);
     hashTable = fileReadAllUsers(filename);
     // printAllUsers(hashTable);
@@ -224,8 +224,8 @@ int main(void) {
     //fileSaveUsers(hashTable, filename);
     printf("\n\nwell it didnt die");
 
-    free_hash_table(&hashTable);
-    free_queue(&queue);
+    free_hash_table(hashTable);
+    free_queue(queue);
     return 0;
 }
 

@@ -46,7 +46,7 @@ void create_transaction(transaction_queue *queue, double amount, bank_account *s
     generate_transaction_code(new_trans->key, sizeof(new_trans->key));
 
     enqueue(queue, new_trans);
-    save_transaction(queue);
+    save_transactions(queue);
     transaction_func(queue, sender, receiver, new_trans);
 }
 
