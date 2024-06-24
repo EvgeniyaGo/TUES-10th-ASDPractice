@@ -175,7 +175,7 @@ bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
     char my_string[MAXREAD_O];
 
     while (fgets(to_be_decrypted, MAXREAD_O, fptr)) {
-        decodeVigenere(to_be_decrypted, my_string);
+        decode_vigenere(to_be_decrypted, my_string);
         char fileID[5];
         char iban[30];
         double balance;
