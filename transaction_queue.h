@@ -1,9 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#ifndef TRANS_H
-#define TRANS_H
+#ifndef TRANSACRIONS_H
+#define TRANSACTIONS_H
 
 void init_queue(transaction_queue *queue);
 
@@ -12,6 +8,5 @@ void enqueue(transaction_queue *queue, transaction *new_trans);
 void generate_transaction_code(char *buffer, size_t buffer_size);
 
 void free_queue(transaction_queue *queue);
-
 
 #endif 
