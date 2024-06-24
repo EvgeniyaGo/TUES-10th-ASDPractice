@@ -121,8 +121,19 @@ void save_transaction(transaction_queue *queue) {
     fclose(fp);
 }
 
-
-
+void transaction_processing(HashTable *table, transaction_queue *queue){
+    transaction_node *current = queue->head;
+    while (current != NULL) {
+        transaction *trans = current->trans;
+        if(trans->status == 'U'){
+            bank_account *ba_S = searchUserById(table, trans->senderID);
+            bank_account *ba_R = searchUserById(table, trans->receiverID);
+            transaction_func(queue, ba_S , ba_R, trans);
+        }
+        current = current->next;
+    }
+    save_transaction(queue);
+}
 
 bank_account * createBankAccount(char * ID) {
     bank_account * bAccount = (bank_account *)malloc(sizeof(bank_account));
