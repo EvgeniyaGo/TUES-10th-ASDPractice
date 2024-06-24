@@ -39,11 +39,12 @@ typedef struct {
 
 void init_queue(transaction_queue *queue);
 void enqueue(transaction_queue *queue, transaction *new_trans);
-void create_transaction(transaction_queue *queue, char *key, double amount, bank_account *sender, bank_account *receiver);
+void create_transaction(HashTable *table, transaction_queue *queue, double amount, bank_account *sender, bank_account *receiver);
 void free_queue(transaction_queue *queue);
 
 void transaction_func(transaction_queue *queue, bank_account *sender, bank_account *receiver, transaction *trans);
 void save_transaction(transaction_queue *queue);
+void transaction_processing(HashTable *table, transaction_queue *queue);
 
 bank_account * findAccountByIDFromFile(char * filename, char * ID);
 bank_account * registerBankAccount(char *ID, char * filename);
