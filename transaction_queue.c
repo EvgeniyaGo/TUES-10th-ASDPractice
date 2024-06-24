@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "operations.h"
 
@@ -27,7 +28,7 @@ void enqueue(transaction_queue *queue, transaction *new_trans) {
     }
 }
 
-void create_transaction(transaction_queue *queue, char *key, double amount, bank_account *sender, bank_account *receiver) {
+void create_transaction(transaction_queue *queue, double amount, bank_account *sender, bank_account *receiver) {
     transaction *new_trans = (transaction *) malloc(sizeof(transaction));
     if (new_trans == NULL) {
         printf("Error allocating memory\n");
@@ -35,10 +36,12 @@ void create_transaction(transaction_queue *queue, char *key, double amount, bank
     }
 
     new_trans->status = 'U';
-    strcpy(new_trans->key, key);
     new_trans->amount = amount;
-    strncpy(new_trans->senderID, sender->ID, 5); 
-    strncpy(new_trans->receiverID, receiver->ID, 5); 
+    new_trans->senderID = sender->ID;
+    new_trans->receiverID = receiver->ID;
+
+    srand(time(NULL)); 
+    generate_transaction_code(new_trans->key, sizeof(new_trans->key));
 
     enqueue(queue, new_trans);
     save_transaction(queue);
@@ -55,4 +58,14 @@ void free_queue(transaction_queue *queue) {
     }
     queue->head = NULL;
     queue->tail = NULL;
+}
+
+void generate_transaction_code(char *buffer, size_t buffer_size) {
+    time_t now = time(NULL); 
+    struct tm *t = localtime(&now);
+
+    strftime(buffer, buffer_size, "%Y%m%d%H%M%S", t);
+
+    int random_number = rand() % 1000000; 
+    snprintf(buffer + strlen(buffer), buffer_size - strlen(buffer), "%06d", random_number);
 }
