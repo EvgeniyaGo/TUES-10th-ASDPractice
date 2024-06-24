@@ -149,11 +149,13 @@ void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, ch
             if(choice == '1') {
                 deposit(loggedBank, 10.00); 
                 printf("  %f\n", loggedBank->balance);
+                updatefileById(banksfilename, loggedBank->ID, loggedBank);
                 break;
             }
             if(choice == '2') {
-                withdrawals(loggedBank, -10.00); 
+                withdrawals(loggedBank, 10.00); 
                 printf("  %f\n", loggedBank->balance);
+                updatefileById(banksfilename, loggedBank->ID, loggedBank);
                 break;
             }
             if(choice == '3') {

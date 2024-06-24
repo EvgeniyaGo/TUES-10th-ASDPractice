@@ -65,7 +65,7 @@ void deposit(bank_account * b_account, double amount) {
 
     if(amount > 0) {
         b_account->balance += amount;
-        printf("Successfully deposited %u. New balance: %u\n", amount, b_account->balance); 
+        printf("Successfully deposited %f. New balance: %f\n", amount, b_account->balance); 
     }else{
         printf("Deposit amount must be positive.\n");
     }
@@ -77,7 +77,7 @@ void withdrawals(bank_account *b_account, double amount) {
     if(amount > 0){
         if (b_account->balance >= amount) {
             b_account->balance -= amount;
-            printf("Successfully withdrew %u. New balance: %u\n", amount, b_account->balance);
+            printf("Successfully withdrew %f. New balance: %f\n", amount, b_account->balance);
         }else{ 
             printf("Insufficient balance.\n");
         }
@@ -155,7 +155,7 @@ bank_account * findAccountByIDFromFile(char * filename, char * ID) {
     FILE *fptr;
     fptr = fopen(filename, "r");
     if (fptr == NULL) {
-        printf("Error opening file %s\n", filename);
+        printf("Error: cannot open file %s\n", filename);
         return NULL;
     }
 
@@ -178,27 +178,81 @@ bank_account * findAccountByIDFromFile(char * filename, char * ID) {
         if (strcmp(ID, fileID) == 0) {
             bank_account * account = (bank_account *)malloc(sizeof(bank_account));
             if (account == NULL) {
-                printf("Memory allocation failed\n");
+                printf("Error: Memory allocation failed\n");
                 fclose(fptr);
                 return NULL;
             }
             strncpy(account->ID, fileID, sizeof(account->ID) - 1);
             account->balance = balance;
             strncpy(account->iban, iban, sizeof(account->iban) - 1);
-
+            account->ID[4] = '\0';
             fclose(fptr);
             return account;
         }
     }
 
     fclose(fptr);
-    printf("Account with ID %s must be created\n", ID);
     return NULL;
 }
 
-bank_account * registerBankAccount(char *ID, char * filename) {
+bank_account * registerBankAccount(char * ID, char * filename) {
     if(findAccountByIDFromFile(filename, ID) != NULL) return findAccountByIDFromFile(filename, ID);
     bank_account * bAccount = createBankAccount(ID);
     fileAddBankAccount(bAccount, filename);
     return bAccount;
+}
+void updatefileById(char *filename, char *searchingId, bank_account *bAccount) {
+    FILE *fptr;
+    char line[MAXREAD_O];
+    char updated[MAXREAD_O * 100] = ""; // Assuming no more than 100 lines
+    int found = 0;
+
+    fptr = fopen(filename, "r");
+    if (fptr == NULL) {
+        printf("Error: cannot open file %s\n", filename);
+        return;
+    }
+
+    while (fgets(line, sizeof(line), fptr)) {
+        char decryptedLine[MAXREAD_O];
+        decodeVigenere(line, decryptedLine);
+
+        char iban[30];
+        double balance;
+        char id[5];
+
+        char *token = strtok(decryptedLine, "|");
+        if (token != NULL) strncpy(iban, token, sizeof(iban) - 1);
+        token = strtok(NULL, "|");
+        if (token != NULL) balance = atof(token);
+        token = strtok(NULL, "\n");
+        if (token != NULL) strncpy(id, token, sizeof(id) - 1);
+        iban[sizeof(iban) - 1] = '\0';
+        id[sizeof(id) - 1] = '\0';
+
+        if (strcmp(searchingId, id) == 0) {
+            char newLine[MAXREAD_O];
+            char encryptedLine[MAXREAD_O];
+            snprintf(newLine, sizeof(newLine), "%s|%.2f|%s\n", bAccount->iban, bAccount->balance, bAccount->ID);
+            vigenereTable(newLine, encryptedLine);
+            strcat(updated, encryptedLine);
+            found = 1;
+        } else {
+            strcat(updated, line);
+        }
+    }
+    fclose(fptr);
+
+    if (!found) {
+        printf("Error: ID %s not found in the file\n", searchingId);
+        return;
+    }
+
+    fptr = fopen(filename, "w");
+    if (fptr == NULL) {
+        printf("Error: cannot open file %s\n", filename);
+        return;
+    }
+    fputs(updated, fptr);
+    fclose(fptr);
 }
