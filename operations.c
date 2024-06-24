@@ -162,7 +162,8 @@ void fileAddBankAccount(bank_account * bAccount, char  *filename) {
     fclose(fptr);
 }
 
-bank_account * findAccountByIDFromFile(char * filename, char * ID) {
+
+bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
     FILE *fptr;
     fptr = fopen(filename, "r");
     if (fptr == NULL) {
@@ -170,33 +171,41 @@ bank_account * findAccountByIDFromFile(char * filename, char * ID) {
         return NULL;
     }
 
-    char toBeDecrypted[MAXREAD_O];
-    char myString[MAXREAD_O];
+    char to_be_decrypted[MAXREAD_O];
+    char my_string[MAXREAD_O];
 
-    while (fgets(toBeDecrypted, MAXREAD_O, fptr)) {
-        decodeVigenere(toBeDecrypted, myString);
+    while (fgets(to_be_decrypted, MAXREAD_O, fptr)) {
+        decodeVigenere(to_be_decrypted, my_string);
         char fileID[5];
         char iban[30];
         double balance;
-        char * token;
+        char *token;
 
-        token = strtok(myString, "|");
+        token = strtok(my_string, "|");
         if (token != NULL) strncpy(iban, token, sizeof(iban) - 1);
+        iban[sizeof(iban) - 1] = '\0'; 
+
         token = strtok(NULL, "|");
         if (token != NULL) balance = atof(token);
+
         token = strtok(NULL, "\n");
         if (token != NULL) strncpy(fileID, token, sizeof(fileID) - 1);
-        if (strcmp(ID, fileID) == 0) {
-            bank_account * account = (bank_account *)malloc(sizeof(bank_account));
+        fileID[sizeof(fileID) - 1] = '\0'; 
+
+        if (strcmp(iban_to_search, iban) == 0) {
+            bank_account *account = (bank_account *)malloc(sizeof(bank_account));
             if (account == NULL) {
                 printf("Error: Memory allocation failed\n");
                 fclose(fptr);
                 return NULL;
             }
             strncpy(account->ID, fileID, sizeof(account->ID) - 1);
+            account->ID[sizeof(account->ID) - 1] = '\0'; 
+
             account->balance = balance;
             strncpy(account->iban, iban, sizeof(account->iban) - 1);
-            account->ID[4] = '\0';
+            account->iban[sizeof(account->iban) - 1] = '\0'; 
+
             fclose(fptr);
             return account;
         }
@@ -204,6 +213,10 @@ bank_account * findAccountByIDFromFile(char * filename, char * ID) {
 
     fclose(fptr);
     return NULL;
+}
+
+void decode_vigenere(const char *input, char *output) {
+    strncpy(output, input, MAXREAD_O);
 }
 
 bank_account * registerBankAccount(char * ID, char * filename) {
