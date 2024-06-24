@@ -169,7 +169,7 @@ void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, ch
 
                 double amount;
                 printf("Enter amount[X.XX]: ");
-                scanf("%f", amount);
+                scanf("%f", &amount);
 
                 bank_account *ba_S = find_account_by_iban(filename ,sender_iban);
                 bank_account *ba_R = find_account_by_iban(filename ,receiver_iban);

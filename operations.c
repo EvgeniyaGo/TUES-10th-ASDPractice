@@ -202,9 +202,11 @@ bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
 
     char to_be_decrypted[MAXREAD_O];
     char my_string[MAXREAD_O];
+    char line[MAXREAD_O];
+    while (fgets(line, sizeof(line), fptr)) {
+        char my_string[MAXREAD_O];
+        decodeVigenere(line, my_string);
 
-    while (fgets(to_be_decrypted, MAXREAD_O, fptr)) {
-        decode_vigenere(to_be_decrypted, my_string);
         char fileID[5];
         char iban[30];
         double balance;
@@ -244,10 +246,6 @@ bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
     return NULL;
 }
 
-void decode_vigenere(const char *input, char *output) {
-    strncpy(output, input, MAXREAD_O);
-}
-
 bank_account * registerBankAccount(char * ID, char * filename) {
     if(findAccountByIDFromFile(filename, ID) != NULL) return findAccountByIDFromFile(filename, ID);
     bank_account * bAccount = createBankAccount(ID);
@@ -257,7 +255,7 @@ bank_account * registerBankAccount(char * ID, char * filename) {
 void updatefileById(char *filename, char *searchingId, bank_account *bAccount) {
     FILE *fptr;
     char line[MAXREAD_O];
-    char updated[MAXREAD_O * 100] = ""; // Assuming no more than 100 lines
+    char updated[MAXREAD_O * 100] = ""; 
     int found = 0;
 
     fptr = fopen(filename, "r");

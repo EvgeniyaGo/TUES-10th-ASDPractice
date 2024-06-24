@@ -37,16 +37,3 @@ void decodeVigenere(char * encr, char * decoded) {
     }
     decoded[i] = '\0';
 }
-
-// int main(void) {
-//     char original[MAXREAD] = "aaabrqwrzrA";
-//     char encr[MAXREAD];
-//     char decoded[MAXREAD];
-//     char KEY[] = "igsummerisforcoding8hoursstraightnow";
-//     int lenKey = strlen(KEY);
-//     vigenereTable(original, encr, KEY, lenKey);
-//     printf("Encrypted: %s\n", encr);
-//     decodeVigenere(encr, decoded, KEY, lenKey);
-//     printf("Decrypted: %s\n", decoded);
-//     return 0;
-// }
