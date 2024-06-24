@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <conio.h>
 
 #include "basefile.h"
 #include "userhandling.h"
@@ -101,15 +102,35 @@ User *  canlogin(HashTable * hashTable, char * username, char * password){
     return foundUser;
 }
 
-void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, char * banksfilename, transaction_queue *queue) {
+
+void dummyMenu(HashTable *hashTable, User *loggedRightNow, char *filename, char *banksfilename, transaction_queue *queue) {
     char choice;
-    
+    int menuChoice = 0;
+    int numChoices;
+    int ch;
+
     if (loggedRightNow == NULL) {
+        numChoices = 3;
         do {
-            printf("1. Login; 2. Register; 3. Exit\n\nChoice: ");
-            scanf(" %c", &choice);
-            while (getchar() != '\n');
-        } while (choice < '1' || choice > '3');
+            printf("\n");
+            printf("%s1. Login\n", menuChoice == 0 ? "> " : "  ");
+            printf("%s2. Register\n", menuChoice == 1 ? "> " : "  ");
+            printf("%s3. Exit\n", menuChoice == 2 ? "> " : "  ");
+
+            ch = _getch(); 
+            if (ch == 0 || ch == 224) {
+                ch = _getch();
+                if (ch == 72) { 
+                    menuChoice = (menuChoice - 1 + numChoices) % numChoices;
+                } else if (ch == 80) {
+                    menuChoice = (menuChoice + 1) % numChoices;
+                }
+            } else if (ch == 13) { 
+                choice = '1' + menuChoice;
+                break;
+            }
+
+        } while (1);
 
         if (choice == '1') {
             printf("Login\n");
@@ -136,7 +157,7 @@ void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, ch
             char username[50];
             char password[32];
             printf("Register\n");
-            
+
             printf("Enter username: ");
             fgets(username, sizeof(username), stdin);
             username[strcspn(username, "\n")] = 0;
@@ -156,59 +177,69 @@ void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, ch
             exit(0);
         }
     } else {
-        printf("Hello, %s!\n", loggedRightNow->userName);
-        printf("You can do money stuff\n");
-        
-        bank_account * loggedBank = registerBankAccount(loggedRightNow->id, banksfilename);
+        bank_account *loggedBank = registerBankAccount(loggedRightNow->id, banksfilename);
+        printf("Hello, %s! Your IBAN is: %s\n", loggedRightNow->userName, loggedBank->iban);
+        numChoices = 5;
         do {
-            printf("\n1. Deposit; 2. Withdraw; 3. Transfer; 4. Process Transactions; 5. Logout\n");
-            printf("Choice: ");
-            scanf(" %c", &choice);
-            while (getchar() != '\n');
+            printf("\n");
+            printf("%s1. Deposit\n", menuChoice == 0 ? "> " : "  ");
+            printf("%s2. Withdraw\n", menuChoice == 1 ? "> " : "  ");
+            printf("%s3. Transfer\n", menuChoice == 2 ? "> " : "  ");
+            printf("%s4. Process Transactions\n", menuChoice == 3 ? "> " : "  ");
+            printf("%s5. Logout\n", menuChoice == 4 ? "> " : "  ");
 
-            if(choice == '1') {
-                deposit(loggedBank, 10.00); 
-                printf("  %f\n", loggedBank->balance);
-                updatefileById(banksfilename, loggedBank->ID, loggedBank);
+            ch = _getch(); 
+            if (ch == 0 || ch == 224) {
+                ch = _getch();
+                if (ch == 72) { 
+                    menuChoice = (menuChoice - 1 + numChoices) % numChoices;
+                } else if (ch == 80) {
+                    menuChoice = (menuChoice + 1) % numChoices;
+                }
+            } else if (ch == 13) { 
+                choice = '1' + menuChoice;
                 break;
             }
-            if(choice == '2') {
-                withdrawals(loggedBank, 10.00); 
-                printf("  %f\n", loggedBank->balance);
-                updatefileById(banksfilename, loggedBank->ID, loggedBank);
-                break;
-            }
-            if(choice == '3') {
-                char sender_iban[30], receiver_iban[30];
-                printf("Enter IBAN of sender: ");
-                scanf("%s", sender_iban);
-                printf("Enter IBAN of reciever: ");
-                scanf("%s", receiver_iban);
-
-                double amount;
-                printf("Enter amount[X.XX]: ");
-                scanf("%f", &amount);
-
-                bank_account *ba_S = find_account_by_iban(filename ,sender_iban);
-                bank_account *ba_R = find_account_by_iban(filename ,receiver_iban);
-                create_transaction(queue, amount, ba_S, ba_R);
-            }
-            if(choice == '4') {
-                transaction_processing(filename, queue);
-            }
-            if(choice == '5') {
-                    printf("Logging out %s\n", loggedRightNow->userName);
-                    loggedRightNow = NULL;
-            }
-        } while (choice != '5');
+        } while (1);
+        if (choice == '1') {
+            double amount;
+            printf("Amount to deposit: ");
+            scanf("%lf", &amount);
+            printf("Am:%f", amount);
+            deposit(loggedBank, amount);
+            printf("  %f\n", loggedBank->balance);
+            updatefileById(banksfilename, loggedBank->ID, loggedBank);
+        } else if (choice == '2') {
+            double amount;
+            printf("Amount to withdraw: ");
+            scanf("%lf", &amount);
+            withdrawals(loggedBank, amount);
+            printf("  %f\n", loggedBank->balance);
+            updatefileById(banksfilename, loggedBank->ID, loggedBank);
+        } else if (choice == '3') {
+            char receiver_iban[30];
+            printf("Enter IBAN of receiver: ");
+            scanf("%s", receiver_iban);
+            double amount;
+            printf("Enter amount[X.XX]: ");
+            scanf("%lf", &amount);
+            bank_account *ba_S = find_account_by_iban(filename, loggedBank->iban);
+            bank_account *ba_R = find_account_by_iban(filename, receiver_iban);
+            printf("%s, %s\n", ba_S->iban, ba_R->iban);
+            create_transaction(queue, amount, ba_S, ba_R);
+        } else if (choice == '4') {
+            transaction_processing(filename, queue);
+        } else if (choice == '5') {
+            printf("Logging out %s\n", loggedRightNow->userName);
+            loggedRightNow = NULL;
+        }
     }
     printf("\n\n\nMenu:\n");
-    dummyMenu(hashTable, loggedRightNow, filename, banksfilename, queue); 
+    dummyMenu(hashTable, loggedRightNow, filename, banksfilename, queue);
 }
 
-
 int main(void) {
-    printf("HI!");
+    printf("Hello and welcome!\n");
     char filename[30] = "wedontstealyourdata.bin"; 
     char banksfilename[30] = "banksfilename.bin"; 
     HashTable * hashTable = createHashTable(); 
@@ -219,7 +250,6 @@ int main(void) {
     // printAllUsers(hashTable);
 //     printf("creating-\n");
   //  createDummyHashTable(hashTable, filename);
-    printf("dummy-\n");
     dummyMenu(hashTable, 0, filename, banksfilename, queue);
     //fileSaveUsers(hashTable, filename);
     printf("\n\nwell it didnt die");

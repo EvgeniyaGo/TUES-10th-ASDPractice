@@ -192,7 +192,7 @@ void fileAddBankAccount(bank_account * bAccount, char  *filename) {
     fclose(fptr);
 }
 
-bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
+bank_account *find_account_by_iban(char *filename, char * iban_to_search) {
     FILE *fptr;
     fptr = fopen(filename, "r");
     if (fptr == NULL) {
@@ -201,7 +201,6 @@ bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
     }
 
     char to_be_decrypted[MAXREAD_O];
-    char my_string[MAXREAD_O];
     char line[MAXREAD_O];
     while (fgets(line, sizeof(line), fptr)) {
         char my_string[MAXREAD_O];
@@ -222,7 +221,6 @@ bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
         token = strtok(NULL, "\n");
         if (token != NULL) strncpy(fileID, token, sizeof(fileID) - 1);
         fileID[sizeof(fileID) - 1] = '\0'; 
-
         if (strcmp(iban_to_search, iban) == 0) {
             bank_account *account = (bank_account *)malloc(sizeof(bank_account));
             if (account == NULL) {

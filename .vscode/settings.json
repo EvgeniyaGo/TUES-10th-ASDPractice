@@ -25,6 +25,7 @@
         "operations.h": "c",
         "cmath": "c",
         "math.h": "c",
-        "sstream": "c"
+        "sstream": "c",
+        "conio.h": "c"
     }
 }
