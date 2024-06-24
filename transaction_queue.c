@@ -4,6 +4,8 @@
 #include <time.h>
 
 #include "operations.h"
+#include "transaction_queue.h"
+#include "basefile.h"
 
 void init_queue(transaction_queue *queue) {
     queue->head = NULL;
@@ -37,8 +39,8 @@ void create_transaction(transaction_queue *queue, double amount, bank_account *s
 
     new_trans->status = 'U';
     new_trans->amount = amount;
-    new_trans->senderID = sender->ID;
-    new_trans->receiverID = receiver->ID;
+    strcpy(new_trans->sender_iban, sender->iban);
+    strcpy(new_trans->receiver_iban, receiver->iban);
 
     srand(time(NULL)); 
     generate_transaction_code(new_trans->key, sizeof(new_trans->key));
