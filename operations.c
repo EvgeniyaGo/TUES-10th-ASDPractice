@@ -114,26 +114,56 @@ void save_transaction(transaction_queue *queue) {
     transaction_node *current = queue->head;
     while (current != NULL) {
         transaction *trans = current->trans;
-        fprintf(fp, "%c|%s|%.2f|%s|%s\n", trans->status, trans->key, trans->amount, trans->senderID, trans->receiverID);
+        fprintf(fp, "%c|%s|%.2f|%s|%s\n", trans->status, trans->key, trans->amount, trans->sender_iban, trans->receiver_iban);
         current = current->next;
     }
 
     fclose(fp);
 }
+void transaction_processing(char *filename, transaction_queue *queue){
+    if(queue == NULL) {
+        fprintf(stderr, "Error: transaction_queue is NULL\n");
+        return;
+    }
 
-void transaction_processing(HashTable *table, transaction_queue *queue){
     transaction_node *current = queue->head;
-    while (current != NULL) {
+    while(current != NULL) {
         transaction *trans = current->trans;
-        if(trans->status == 'U'){
-            bank_account *ba_S = searchUserById(table, trans->senderID);
-            bank_account *ba_R = searchUserById(table, trans->receiverID);
-            transaction_func(queue, ba_S , ba_R, trans);
+        if(trans == NULL) {
+            fprintf(stderr, "Error: transaction is NULL\n");
+            current = current->next;
+            continue; 
+        }
+
+        if(trans->status == 'U') {
+            bank_account *ba_S = find_account_by_iban(filename, trans->sender_iban);
+            bank_account *ba_R = find_account_by_iban(filename, trans->receiver_iban);
+
+            if(ba_S == NULL) {
+                fprintf(stderr, "Error: Sender with IBAN %d not found\n", trans->sender_iban);
+                trans->status = 'F'; 
+                current = current->next;
+                continue; 
+            }
+            if(ba_R == NULL) {
+                fprintf(stderr, "Error: Receiver with IBAN %d not found\n", trans->receiver_iban);
+                trans->status = 'F';
+                current = current->next;
+                continue; 
+            }
+            if(ba_S->balance < trans->amount) {
+                fprintf(stderr, "Error: Insufficient funds for transaction from IBAN %d\n", trans->sender_iban);
+                trans->status = 'F'; 
+                current = current->next;
+                continue; 
+            }
+            transaction_func(queue, ba_S, ba_R, trans);
         }
         current = current->next;
     }
     save_transaction(queue);
 }
+
 
 bank_account * createBankAccount(char * ID) {
     bank_account * bAccount = (bank_account *)malloc(sizeof(bank_account));
@@ -161,7 +191,6 @@ void fileAddBankAccount(bank_account * bAccount, char  *filename) {
     fprintf(fptr, "%s\n", encrypted);
     fclose(fptr);
 }
-
 
 bank_account *find_account_by_iban(char *filename, char *iban_to_search) {
     FILE *fptr;
