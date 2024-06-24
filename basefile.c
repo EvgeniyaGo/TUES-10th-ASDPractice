@@ -53,6 +53,24 @@ HashTable * createDummyHashTable(HashTable * hashTable, char * filename){
     return hashTable;
 }
 
+void free_hash_table(HashTable *hash_table) {
+    if (hash_table == NULL) {
+        return;
+    }
+
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        BucketNode *current = hash_table->buckets[i];
+        while (current != NULL) {
+            BucketNode *next_node = current->next;
+            free(current->user); 
+            free(current); 
+            current = next_node;
+        }
+    }
+
+    free(hash_table);
+}
+
 void hashedToDecimalString(uint8_t *hashed, char *passchar) {
     int passcharind = 0;
     for (int i = 0; i < 32; i++) {
@@ -205,6 +223,9 @@ int main(void) {
     dummyMenu(hashTable, 0, filename, banksfilename, queue);
     //fileSaveUsers(hashTable, filename);
     printf("\n\nwell it didnt die");
+
+    free_hash_table(&hashTable);
+    free_queue(&queue);
     return 0;
 }
 
