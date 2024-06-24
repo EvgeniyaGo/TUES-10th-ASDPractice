@@ -7,7 +7,7 @@
 
 void init_queue(transaction_queue *queue);
 void free_queue(transaction_queue *queue);
-void create_transaction(transaction_queue *queue, char *key, double amount, bank_account *sender, bank_account *receiver);
+void create_transaction(transaction_queue *queue, double amount, bank_account *sender, bank_account *receiver);
 void enqueue(transaction_queue *queue, transaction *new_trans);
 
 
