@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+
 #include "basefile.h"
 #include "userhandling.h"
 #include "cryptfiles.h"
 #include "sha-passhash.h"
 #include "operations.h"
+#include "transaction_queue.h"
 
 //Working with HashTable - creating, filling, accessing
 //I use hashset with buckets for storing and quickly accessing all the users. From 0(1) till 0(n/26)=0(n)
@@ -81,7 +83,7 @@ User *  canlogin(HashTable * hashTable, char * username, char * password){
     return foundUser;
 }
 
-void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, char * banksfilename) {
+void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, char * banksfilename, transaction_queue *queue) {
     char choice;
     
     if (loggedRightNow == NULL) {
@@ -159,8 +161,22 @@ void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, ch
                 break;
             }
             if(choice == '3') {
+                char sender_iban[30], receiver_iban[30];
+                printf("Enter IBAN of sender: ");
+                scanf("%s", sender_iban);
+                printf("Enter IBAN of reciever: ");
+                scanf("%s", receiver_iban);
+
+                double amount;
+                printf("Enter amount[X.XX]: ");
+                scanf("%f", amount);
+
+                bank_account *ba_S = find_account_by_iban(filename ,sender_iban);
+                bank_account *ba_R = find_account_by_iban(filename ,receiver_iban);
+                create_transaction(queue, amount, ba_S, ba_R);
             }
             if(choice == '4') {
+                transaction_processing(filename, queue);
             }
             if(choice == '5') {
                     printf("Logging out %s\n", loggedRightNow->userName);
@@ -169,7 +185,7 @@ void dummyMenu(HashTable * hashTable, User * loggedRightNow, char * filename, ch
         } while (choice != '5');
     }
     printf("\n\n\nMenu:\n");
-    dummyMenu(hashTable, loggedRightNow, filename, banksfilename); 
+    dummyMenu(hashTable, loggedRightNow, filename, banksfilename, queue); 
 }
 
 
@@ -178,14 +194,17 @@ int main(void) {
     char filename[30] = "wedontstealyourdata.bin"; 
     char banksfilename[30] = "banksfilename.bin"; 
     HashTable * hashTable = createHashTable(); 
+    transaction_queue *queue;
+    init_queue(&queue);
 //    dummyMenu(hashTable, 0);
     hashTable = fileReadAllUsers(filename);
     // printAllUsers(hashTable);
 //     printf("creating-\n");
   //  createDummyHashTable(hashTable, filename);
     printf("dummy-\n");
-    dummyMenu(hashTable, 0, filename, banksfilename);
+    dummyMenu(hashTable, 0, filename, banksfilename, queue);
     //fileSaveUsers(hashTable, filename);
     printf("\n\nwell it didnt die");
     return 0;
 }
+
