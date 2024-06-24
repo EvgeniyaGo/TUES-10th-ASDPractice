@@ -15,7 +15,8 @@ void generate_random_account_number(char *account_number, int length);
 int calculate_checksum(const char *iban);
 void generate_iban(char *iban);
 
-bank_account * findAccountByIDFromFile(char * filename, char * ID);
+bank_account *find_account_by_iban(char *filename, char *iban_to_search);
+void decode_vigenere(const char *input, char *output);
 bank_account * registerBankAccount(char *ID, char * filename);
 void fileAddBankAccount(bank_account *bAccount, char *filename);
 bank_account * createBankAccount(char * ID);
